@@ -4,11 +4,68 @@
         Title="Vector Visualization"
         Height="600"
         Width="800"
+        SizeChanged="Window_SizeChanged"
         MouseDown="Window_MouseDown"
         MouseMove="Window_MouseMove"
         MouseUp="Window_MouseUp">
     <Grid>
-        <Canvas x:Name="DrawingCanvas"
-                Background="White"  />
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        <StackPanel Grid.Column="0"
+                    VerticalAlignment="Top"
+                    HorizontalAlignment="Left"
+                    Margin="10">
+            <StackPanel Orientation="Vertical">
+                <Label VerticalAlignment="Center">Скалярное произведение: </Label>
+                <TextBox VerticalAlignment="Center"
+                         Name="DotProductTextBlock"
+                         Foreground="Black"
+                         FontSize="14"
+                         Text="10" />
+            </StackPanel>
+            <StackPanel Orientation="Vertical">
+                <Label VerticalAlignment="Center">Координаты вектора 1: </Label>
+                <TextBox VerticalAlignment="Center"
+                         Name="Vector1CoordinatesTextBlock"
+                         Foreground="Red"
+                         FontSize="14" />
+            </StackPanel>
+            <StackPanel Orientation="Vertical">
+                <Label VerticalAlignment="Center">Координаты вектора 2: </Label>
+                <TextBox VerticalAlignment="Center"
+                         Name="Vector2CoordinatesTextBlock"
+                         Foreground="Blue"
+                         FontSize="14" />
+            </StackPanel>
+            <StackPanel Orientation="Vertical">
+                <Label VerticalAlignment="Center">Угол между векторами: </Label>
+                <TextBox VerticalAlignment="Center"
+                         Name="AngleTextBlock"
+                         Foreground="Black"
+                         FontSize="14" />
+            </StackPanel>
+            <StackPanel Orientation="Vertical">
+                <Label VerticalAlignment="Center"
+                       Content="{Binding ElementName=StepSlider, Path=Value, StringFormat=Шаг: {0:F2}}" />
+                <Slider x:Name="StepSlider"
+                        Minimum="0.001"
+                        Maximum="1"
+                        Value="0.01"
+                        IsSnapToTickEnabled="True"
+                        TickFrequency="0.001"
+                        ValueChanged="StepSlider_ValueChanged"
+                        VerticalAlignment="Top"
+                        Margin="10" />
+            </StackPanel>
+        </StackPanel>
+        <GridSplitter Grid.Column="1"
+                      Width="1"
+                      Foreground="Black" />
+        <Canvas Grid.Column="2"
+                x:Name="DrawingCanvas"
+                Background="White" />
     </Grid>
 </Window>

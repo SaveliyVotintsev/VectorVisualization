@@ -8,15 +8,36 @@ namespace VectorVisualization.WPF;
 
 public partial class VectorVisualizationView : Window
 {
+    private double _step = 0.01;
     private Point _vector1 = new(1, 0);
     private Point _vector2 = new(0, 1);
     private bool _draggingVector1;
     private bool _draggingVector2;
-    private readonly double _step = 0.1;
+    private double _centerX;
+    private double _centerY;
 
     public VectorVisualizationView()
     {
         InitializeComponent();
+
+        _centerX = DrawingCanvas.ActualWidth / 2;
+        _centerY = DrawingCanvas.ActualHeight / 2;
+
+        DrawingCanvas.MinHeight = 200 + 50;
+        DrawingCanvas.MinWidth = 200 + 50;
+
+        Draw();
+    }
+
+    private void StepSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        _step = e.NewValue;
+    }
+
+    private void Window_SizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        _centerX = DrawingCanvas.ActualWidth / 2;
+        _centerY = DrawingCanvas.ActualHeight / 2;
         Draw();
     }
 
@@ -60,12 +81,13 @@ public partial class VectorVisualizationView : Window
         try
         {
             DrawingCanvas.Children.Clear();
+
             DrawCircle();
             DrawVector(_vector1, Colors.Red);
             DrawVector(_vector2, Colors.Blue);
-            DrawDotProduct();
-            DrawCoordinates();
-            DrawAngle();
+            DrawCircleCenter();
+
+            UpdateInformation();
         }
         catch (Exception e)
         {
@@ -84,15 +106,29 @@ public partial class VectorVisualizationView : Window
             Height = 200,
         };
 
-        Canvas.SetLeft(circle, 300);
-        Canvas.SetTop(circle, 200);
+        Canvas.SetLeft(circle, _centerX - circle.Width / 2);
+        Canvas.SetTop(circle, _centerY - circle.Height / 2);
         DrawingCanvas.Children.Add(circle);
+    }
+
+    private void DrawCircleCenter()
+    {
+        Ellipse centerDot = new()
+        {
+            Fill = Brushes.Black,
+            Width = 5,
+            Height = 5,
+        };
+
+        Canvas.SetLeft(centerDot, _centerX - centerDot.Width / 2);
+        Canvas.SetTop(centerDot, _centerY - centerDot.Height / 2);
+        DrawingCanvas.Children.Add(centerDot);
     }
 
     private void DrawVector(Point vector, Color color)
     {
-        Point start = new(400, 300);
-        Point end = new(400 + vector.X * 100, 300 - vector.Y * 100);
+        Point start = new(_centerX, _centerY);
+        Point end = new(_centerX + vector.X * (200 / 2d), _centerY - vector.Y * (200 / 2d));
 
         Line line = new()
         {
@@ -145,77 +181,29 @@ public partial class VectorVisualizationView : Window
         DrawingCanvas.Children.Add(arrowLine2);
     }
 
-    private void DrawDotProduct()
+    private void UpdateInformation()
     {
         double dotProduct = _vector1.X * _vector2.X + _vector1.Y * _vector2.Y;
+        DotProductTextBlock.Text = $"{dotProduct:F6}";
 
-        TextBlock textBlock = new()
-        {
-            Text = $"Скалярное произведение: {dotProduct:F6}",
-            Foreground = Brushes.Black,
-            FontSize = 14,
-        };
+        Vector1CoordinatesTextBlock.Text = $"({_vector1.X:F6}, {_vector1.Y:F6})";
+        Vector2CoordinatesTextBlock.Text = $"({_vector2.X:F6}, {_vector2.Y:F6})";
 
-        Canvas.SetLeft(textBlock, 10);
-        Canvas.SetTop(textBlock, 10);
-        DrawingCanvas.Children.Add(textBlock);
-    }
-
-    private void DrawCoordinates()
-    {
-        TextBlock textBlock1 = new()
-        {
-            Text = $"Координаты вектора 1: ({_vector1.X:F6}, {_vector1.Y:F6})",
-            Foreground = Brushes.Red,
-            FontSize = 14,
-        };
-
-        Canvas.SetLeft(textBlock1, 10);
-        Canvas.SetTop(textBlock1, 30);
-        DrawingCanvas.Children.Add(textBlock1);
-
-        TextBlock textBlock2 = new()
-        {
-            Text = $"Координаты вектора 2: ({_vector2.X:F6}, {_vector2.Y:F6})",
-            Foreground = Brushes.Blue,
-            FontSize = 14,
-        };
-
-        Canvas.SetLeft(textBlock2, 10);
-        Canvas.SetTop(textBlock2, 50);
-        DrawingCanvas.Children.Add(textBlock2);
-    }
-
-    private void DrawAngle()
-    {
-        double dotProduct = _vector1.X * _vector2.X + _vector1.Y * _vector2.Y;
         double angle = Math.Acos(dotProduct) * (180.0 / Math.PI);
-
-        TextBlock textBlock = new()
-        {
-            Text = $"Угол между векторами: {angle:F2}°",
-            Foreground = Brushes.Black,
-            FontSize = 14,
-        };
-
-        Canvas.SetLeft(textBlock, 10);
-        Canvas.SetTop(textBlock, 70);
-        DrawingCanvas.Children.Add(textBlock);
+        AngleTextBlock.Text = $"{angle:F2}°";
     }
 
     private bool IsPointOnVector(Point point, Point vector)
     {
-        double x = 400 + vector.X * 100;
-        double y = 300 - vector.Y * 100;
+        double x = _centerX + vector.X * 100;
+        double y = _centerY - vector.Y * 100;
         return Math.Abs(point.X - x) < 10 && Math.Abs(point.Y - y) < 10;
     }
 
     private Point GetSnappedVector(Point point)
     {
-        double centerX = 400;
-        double centerY = 300;
-        double dx = point.X - centerX;
-        double dy = centerY - point.Y;
+        double dx = point.X - _centerX;
+        double dy = _centerY - point.Y;
         double length = Math.Sqrt(dx * dx + dy * dy);
 
         double unitX = dx / length;
