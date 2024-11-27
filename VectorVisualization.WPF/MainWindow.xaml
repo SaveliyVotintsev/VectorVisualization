@@ -1,70 +1,88 @@
-﻿<Window x:Class="VectorVisualization.WPF.VectorVisualizationView"
+﻿<Window x:Class="VectorVisualization.WPF.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:wpf="clr-namespace:VectorVisualization.WPF"
+        mc:Ignorable="d"
         Title="Vector Visualization"
         Height="600"
         Width="800"
-        SizeChanged="Window_SizeChanged"
-        MouseDown="Window_MouseDown"
-        MouseMove="Window_MouseMove"
-        MouseUp="Window_MouseUp">
+        SizeChanged="OnSizeChanged"
+        MouseDown="OnMouseDown"
+        MouseMove="OnMouseMoved"
+        MouseUp="OnMouseUp"
+        d:DataContext="{d:DesignInstance wpf:MainWindow}">
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="Auto" />
             <ColumnDefinition Width="Auto" />
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
         <StackPanel Grid.Column="0"
                     VerticalAlignment="Top"
-                    HorizontalAlignment="Left"
+                    HorizontalAlignment="Stretch"
                     Margin="10">
             <StackPanel Orientation="Vertical">
-                <Label VerticalAlignment="Center">Скалярное произведение: </Label>
+                <TextBlock VerticalAlignment="Center">Скалярное произведение: </TextBlock>
                 <TextBox VerticalAlignment="Center"
                          Name="DotProductTextBlock"
                          Foreground="Black"
                          FontSize="14"
-                         Text="10" />
+                         Text="10"
+                         IsReadOnly="True" />
             </StackPanel>
             <StackPanel Orientation="Vertical">
-                <Label VerticalAlignment="Center">Координаты вектора 1: </Label>
+                <TextBlock VerticalAlignment="Center">Координаты вектора 1: </TextBlock>
                 <TextBox VerticalAlignment="Center"
                          Name="Vector1CoordinatesTextBlock"
                          Foreground="Red"
-                         FontSize="14" />
+                         FontSize="14"
+                         IsReadOnly="True" />
             </StackPanel>
             <StackPanel Orientation="Vertical">
-                <Label VerticalAlignment="Center">Координаты вектора 2: </Label>
+                <TextBlock VerticalAlignment="Center">Координаты вектора 2: </TextBlock>
                 <TextBox VerticalAlignment="Center"
-                         Name="Vector2CoordinatesTextBlock"
+                         x:Name="Vector2CoordinatesTextBlock"
                          Foreground="Blue"
-                         FontSize="14" />
+                         FontSize="14"
+                         IsReadOnly="True" />
             </StackPanel>
             <StackPanel Orientation="Vertical">
-                <Label VerticalAlignment="Center">Угол между векторами: </Label>
+                <TextBlock VerticalAlignment="Center">Угол между векторами: </TextBlock>
                 <TextBox VerticalAlignment="Center"
-                         Name="AngleTextBlock"
+                         x:Name="AngleTextBlock"
+                         Foreground="Black"
+                         FontSize="14"
+                         IsReadOnly="True" />
+            </StackPanel>
+            <StackPanel Orientation="Vertical">
+                <TextBlock VerticalAlignment="Center">Длина вектора: </TextBlock>
+                <TextBox VerticalAlignment="Center"
+                         x:Name="VectorLengthTextBox"
                          Foreground="Black"
                          FontSize="14" />
+
+                <Button Content="Установить длину"
+                        VerticalAlignment="Top"
+                        Click="OnSetLengthClicked" />
             </StackPanel>
             <StackPanel Orientation="Vertical">
-                <Label VerticalAlignment="Center"
-                       Content="{Binding ElementName=StepSlider, Path=Value, StringFormat=Шаг: {0:F2}}" />
+                <TextBlock VerticalAlignment="Center"
+                           Text="{Binding ElementName=StepSlider, Path=Value, StringFormat=Шаг: {0:F2}}" />
                 <Slider x:Name="StepSlider"
                         Minimum="0.001"
                         Maximum="1"
                         Value="0.01"
                         IsSnapToTickEnabled="True"
                         TickFrequency="0.001"
-                        ValueChanged="StepSlider_ValueChanged"
+                        ValueChanged="OnStepChanged"
                         VerticalAlignment="Top"
                         Margin="10" />
             </StackPanel>
         </StackPanel>
-        <GridSplitter Grid.Column="1"
-                      Width="1"
-                      Foreground="Black" />
-        <Canvas Grid.Column="2"
+        <GridSplitter Grid.Column="0"
+                      Width="3" />
+        <Canvas Grid.Column="1"
                 x:Name="DrawingCanvas"
                 Background="White" />
     </Grid>

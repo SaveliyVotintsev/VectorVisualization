@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using System.Globalization;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
@@ -6,9 +7,10 @@ using System.Windows.Shapes;
 
 namespace VectorVisualization.WPF;
 
-public partial class VectorVisualizationView : Window
+public partial class MainWindow : Window
 {
     private double _step = 0.01;
+    private double _vectorLenght = 1;
     private Point _vector1 = new(1, 0);
     private Point _vector2 = new(0, 1);
     private bool _draggingVector1;
@@ -16,7 +18,7 @@ public partial class VectorVisualizationView : Window
     private double _centerX;
     private double _centerY;
 
-    public VectorVisualizationView()
+    public MainWindow()
     {
         InitializeComponent();
 
@@ -26,22 +28,37 @@ public partial class VectorVisualizationView : Window
         DrawingCanvas.MinHeight = 200 + 50;
         DrawingCanvas.MinWidth = 200 + 50;
 
+        VectorLengthTextBox.Text = _vectorLenght.ToString(CultureInfo.InvariantCulture);
+
         Draw();
     }
 
-    private void StepSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    private void OnSetLengthClicked(object sender, RoutedEventArgs e)
+    {
+        if (double.TryParse(VectorLengthTextBox.Text, out double newLength) && newLength > 0)
+        {
+            _vectorLenght = newLength;
+            Draw();
+        }
+        else
+        {
+            MessageBox.Show("Введите допустимое положительное число для длины вектора.");
+        }
+    }
+
+    private void OnStepChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
     {
         _step = e.NewValue;
     }
 
-    private void Window_SizeChanged(object sender, SizeChangedEventArgs e)
+    private void OnSizeChanged(object sender, SizeChangedEventArgs e)
     {
         _centerX = DrawingCanvas.ActualWidth / 2;
         _centerY = DrawingCanvas.ActualHeight / 2;
         Draw();
     }
 
-    private void Window_MouseDown(object sender, MouseButtonEventArgs e)
+    private void OnMouseDown(object sender, MouseButtonEventArgs e)
     {
         if (IsPointOnVector(e.GetPosition(DrawingCanvas), _vector1))
         {
@@ -55,7 +72,7 @@ public partial class VectorVisualizationView : Window
         }
     }
 
-    private void Window_MouseMove(object sender, MouseEventArgs e)
+    private void OnMouseMoved(object sender, MouseEventArgs e)
     {
         if (_draggingVector1)
         {
@@ -69,7 +86,7 @@ public partial class VectorVisualizationView : Window
         }
     }
 
-    private void Window_MouseUp(object sender, MouseButtonEventArgs e)
+    private void OnMouseUp(object sender, MouseButtonEventArgs e)
     {
         _draggingVector1 = false;
         _draggingVector2 = false;
@@ -183,13 +200,13 @@ public partial class VectorVisualizationView : Window
 
     private void UpdateInformation()
     {
-        double dotProduct = _vector1.X * _vector2.X + _vector1.Y * _vector2.Y;
+        double dotProduct = _vector1.X * _vector2.X * _vectorLenght + _vector1.Y * _vector2.Y * _vectorLenght;
         DotProductTextBlock.Text = $"{dotProduct:F6}";
 
-        Vector1CoordinatesTextBlock.Text = $"({_vector1.X:F6}, {_vector1.Y:F6})";
-        Vector2CoordinatesTextBlock.Text = $"({_vector2.X:F6}, {_vector2.Y:F6})";
+        Vector1CoordinatesTextBlock.Text = $"({_vector1.X * _vectorLenght:F6}, {_vector1.Y * _vectorLenght:F6})";
+        Vector2CoordinatesTextBlock.Text = $"({_vector2.X * _vectorLenght:F6}, {_vector2.Y * _vectorLenght:F6})";
 
-        double angle = Math.Acos(dotProduct) * (180.0 / Math.PI);
+        double angle = Math.Acos(_vector1.X * _vector2.X + _vector1.Y * _vector2.Y) * (180.0 / Math.PI);
         AngleTextBlock.Text = $"{angle:F2}°";
     }
 
