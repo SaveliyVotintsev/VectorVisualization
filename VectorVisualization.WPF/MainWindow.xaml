@@ -68,13 +68,13 @@
             </StackPanel>
             <StackPanel Orientation="Vertical">
                 <TextBlock VerticalAlignment="Center"
-                           Text="{Binding ElementName=StepSlider, Path=Value, StringFormat=Шаг: {0:F2}}" />
+                           Text="{Binding ElementName=StepSlider, Path=Value, StringFormat=Шаг: {0:F3}}" />
                 <Slider x:Name="StepSlider"
-                        Minimum="0.001"
-                        Maximum="1"
-                        Value="0.01"
+                        Minimum="0.01"
+                        Maximum="15"
+                        Value="0.5"
                         IsSnapToTickEnabled="True"
-                        TickFrequency="0.001"
+                        TickFrequency="0.01"
                         ValueChanged="OnStepChanged"
                         VerticalAlignment="Top"
                         Margin="10" />

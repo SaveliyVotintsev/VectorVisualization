@@ -9,24 +9,27 @@ namespace VectorVisualization.WPF;
 
 public partial class MainWindow : Window
 {
-    private double _step = 0.01;
+    private double _step = 0.02;
     private double _vectorLenght = 1;
+    private readonly double _diameter = 300;
+
     private Point _vector1 = new(1, 0);
     private Point _vector2 = new(0, 1);
+
     private bool _draggingVector1;
     private bool _draggingVector2;
-    private double _centerX;
-    private double _centerY;
+
+    private Point _center;
+    private double Radius => _diameter / 2;
 
     public MainWindow()
     {
         InitializeComponent();
 
-        _centerX = DrawingCanvas.ActualWidth / 2;
-        _centerY = DrawingCanvas.ActualHeight / 2;
+        _center = new Point(DrawingCanvas.ActualWidth / 2, DrawingCanvas.ActualHeight / 2);
 
-        DrawingCanvas.MinHeight = 200 + 50;
-        DrawingCanvas.MinWidth = 200 + 50;
+        DrawingCanvas.MinHeight = _diameter + 50;
+        DrawingCanvas.MinWidth = _diameter + 50;
 
         VectorLengthTextBox.Text = _vectorLenght.ToString(CultureInfo.InvariantCulture);
 
@@ -53,8 +56,7 @@ public partial class MainWindow : Window
 
     private void OnSizeChanged(object sender, SizeChangedEventArgs e)
     {
-        _centerX = DrawingCanvas.ActualWidth / 2;
-        _centerY = DrawingCanvas.ActualHeight / 2;
+        _center = new Point(DrawingCanvas.ActualWidth / 2, DrawingCanvas.ActualHeight / 2);
         Draw();
     }
 
@@ -76,12 +78,12 @@ public partial class MainWindow : Window
     {
         if (_draggingVector1)
         {
-            _vector1 = GetSnappedVector(e.GetPosition(DrawingCanvas));
+            _vector1 = (Point)GetSnappedVector(e.GetPosition(DrawingCanvas));
             Draw();
         }
         else if (_draggingVector2)
         {
-            _vector2 = GetSnappedVector(e.GetPosition(DrawingCanvas));
+            _vector2 = (Point)GetSnappedVector(e.GetPosition(DrawingCanvas));
             Draw();
         }
     }
@@ -99,10 +101,16 @@ public partial class MainWindow : Window
         {
             DrawingCanvas.Children.Clear();
 
+            DrawAxes();
             DrawCircle();
             DrawVector(_vector1, Colors.Red);
             DrawVector(_vector2, Colors.Blue);
             DrawCircleCenter();
+
+            DrawProjection(_vector1, Colors.Red);
+            DrawProjection(_vector2, Colors.Blue);
+
+            DrawAngleArc(_vector1, _vector2, Colors.Green);
 
             UpdateInformation();
         }
@@ -119,12 +127,12 @@ public partial class MainWindow : Window
         {
             Stroke = Brushes.Black,
             StrokeThickness = 1,
-            Width = 200,
-            Height = 200,
+            Width = _diameter,
+            Height = _diameter,
         };
 
-        Canvas.SetLeft(circle, _centerX - circle.Width / 2);
-        Canvas.SetTop(circle, _centerY - circle.Height / 2);
+        Canvas.SetLeft(circle, _center.X - circle.Width / 2);
+        Canvas.SetTop(circle, _center.Y - circle.Height / 2);
         DrawingCanvas.Children.Add(circle);
     }
 
@@ -137,15 +145,15 @@ public partial class MainWindow : Window
             Height = 5,
         };
 
-        Canvas.SetLeft(centerDot, _centerX - centerDot.Width / 2);
-        Canvas.SetTop(centerDot, _centerY - centerDot.Height / 2);
+        Canvas.SetLeft(centerDot, _center.X - centerDot.Width / 2);
+        Canvas.SetTop(centerDot, _center.Y - centerDot.Height / 2);
         DrawingCanvas.Children.Add(centerDot);
     }
 
     private void DrawVector(Point vector, Color color)
     {
-        Point start = new(_centerX, _centerY);
-        Point end = new(_centerX + vector.X * (200 / 2d), _centerY - vector.Y * (200 / 2d));
+        Point start = _center;
+        Point end = new(_center.X + vector.X * Radius, _center.Y - vector.Y * Radius);
 
         Line line = new()
         {
@@ -159,6 +167,162 @@ public partial class MainWindow : Window
 
         DrawingCanvas.Children.Add(line);
         DrawArrowHead(end, vector, color);
+    }
+
+    private void DrawAngleArc(Point vector1, Point vector2, Color color)
+    {
+        double angle = Vector.AngleBetween(new Vector(vector1.X, -vector1.Y), new Vector(vector2.X, -vector2.Y));
+        double radius = Radius / 3;
+
+        Point startPoint = new(_center.X + vector1.X * radius, _center.Y - vector1.Y * radius);
+        Point endPoint = new(_center.X + vector2.X * radius, _center.Y - vector2.Y * radius);
+
+        PathFigure pathFigure = new()
+        {
+            StartPoint = startPoint,
+        };
+
+        ArcSegment arcSegment = new()
+        {
+            Point = endPoint,
+            Size = new Size(radius, radius),
+            SweepDirection = angle > 0 ? SweepDirection.Clockwise : SweepDirection.Counterclockwise,
+            IsLargeArc = Math.Abs(angle) > 180,
+        };
+
+        pathFigure.Segments.Add(arcSegment);
+
+        PathGeometry pathGeometry = new();
+        pathGeometry.Figures.Add(pathFigure);
+
+        Path arcPath = new()
+        {
+            Stroke = new SolidColorBrush(color),
+            StrokeThickness = 1,
+            StrokeDashArray = [6, 6],
+            Data = pathGeometry,
+        };
+
+        DrawingCanvas.Children.Add(arcPath);
+
+        Point midPoint = new((startPoint.X + endPoint.X) / 2, (startPoint.Y + endPoint.Y) / 2);
+
+        TextBlock label = new()
+        {
+            Text = $"{angle:F2}°",
+            Foreground = new SolidColorBrush(color),
+            Background = Brushes.White,
+            ToolTip = $"{angle:F2}°",
+        };
+
+        Canvas.SetLeft(label, midPoint.X - 20);
+        Canvas.SetTop(label, midPoint.Y - 10);
+
+        DrawingCanvas.Children.Add(label);
+    }
+
+    private void DrawAxes()
+    {
+        Line lineX = new()
+        {
+            Stroke = new SolidColorBrush(Colors.LightGray),
+            StrokeThickness = 1,
+            X1 = 0,
+            Y1 = _center.Y,
+            X2 = DrawingCanvas.ActualWidth,
+            Y2 = _center.Y,
+        };
+
+        Line lineY = new()
+        {
+            Stroke = new SolidColorBrush(Colors.LightGray),
+            StrokeThickness = 1,
+            X1 = _center.X,
+            Y1 = 0,
+            X2 = _center.X,
+            Y2 = DrawingCanvas.ActualHeight,
+        };
+
+        DrawingCanvas.Children.Add(lineX);
+        DrawingCanvas.Children.Add(lineY);
+
+        DrawArrowHead(new Point(lineX.X2, lineX.Y2), new Point(1, 0), Colors.LightGray);
+        DrawArrowHead(new Point(lineY.X1, lineY.Y1), new Point(0, 1), Colors.LightGray);
+
+        DrawText("X", lineX.X2 - 20, lineX.Y2 + 2);
+        DrawText("Y", lineY.X1 + 10, lineY.Y1 + 2);
+        DrawText("0", _center.X, _center.Y);
+
+        string label = _vectorLenght.ToString("F3");
+
+        DrawText(label, _center.X + Radius, _center.Y, 10);
+        DrawText(label, _center.X, _center.Y - Radius - 15, 10);
+        DrawText("-" + label, _center.X - Radius - 32, _center.Y, 10);
+        DrawText("-" + label, _center.X, _center.Y + Radius, 10);
+        return;
+
+        void DrawText(string text, double left, double top, double fontSize = 14)
+        {
+            TextBlock textBlock = new()
+            {
+                Text = text,
+                Foreground = Brushes.Black,
+                FontSize = fontSize,
+            };
+
+            Canvas.SetLeft(textBlock, left);
+            Canvas.SetTop(textBlock, top);
+            DrawingCanvas.Children.Add(textBlock);
+        }
+    }
+
+    private void DrawProjection(Point vector, Color color)
+    {
+        Point start = _center;
+        Point end = new(start.X + vector.X * Radius, start.Y - vector.Y * Radius);
+
+        Line projectionX = new()
+        {
+            Stroke = new SolidColorBrush(color),
+            StrokeThickness = 1,
+            StrokeDashArray = [2, 2],
+            X1 = end.X,
+            Y1 = end.Y,
+            X2 = end.X,
+            Y2 = start.Y,
+        };
+
+        DrawingCanvas.Children.Add(projectionX);
+        DrawProjectionLabel(end.X, start.Y, vector.X * _vectorLenght, color);
+
+        Line projectionY = new()
+        {
+            Stroke = new SolidColorBrush(color),
+            StrokeThickness = 1,
+            StrokeDashArray = [2, 2],
+            X1 = end.X,
+            Y1 = end.Y,
+            X2 = start.X,
+            Y2 = end.Y,
+        };
+
+        DrawingCanvas.Children.Add(projectionY);
+        DrawProjectionLabel(start.X, end.Y, vector.Y * _vectorLenght, color);
+    }
+
+    private void DrawProjectionLabel(double x, double y, double value, Color color)
+    {
+        TextBlock label = new()
+        {
+            Text = $"{value:F3}",
+            Foreground = new SolidColorBrush(color),
+            Background = new SolidColorBrush(Colors.White),
+            ToolTip = $"{value:F3}",
+        };
+
+        Canvas.SetLeft(label, x + 2);
+        Canvas.SetTop(label, y + 2);
+        DrawingCanvas.Children.Add(label);
     }
 
     private void DrawArrowHead(Point end, Point vector, Color color)
@@ -200,50 +364,38 @@ public partial class MainWindow : Window
 
     private void UpdateInformation()
     {
-        double dotProduct = _vector1.X * _vector2.X * _vectorLenght + _vector1.Y * _vector2.Y * _vectorLenght;
-        DotProductTextBlock.Text = $"{dotProduct:F6}";
+        Vector vector1 = new Vector(_vector1.X, _vector1.Y) * _vectorLenght;
+        Vector vector2 = new Vector(_vector2.X, _vector2.Y) * _vectorLenght;
 
-        Vector1CoordinatesTextBlock.Text = $"({_vector1.X * _vectorLenght:F6}, {_vector1.Y * _vectorLenght:F6})";
-        Vector2CoordinatesTextBlock.Text = $"({_vector2.X * _vectorLenght:F6}, {_vector2.Y * _vectorLenght:F6})";
+        double angle = Vector.AngleBetween(vector1, vector2);
+        double dotProduct = Vector.Multiply(vector1, vector2);
 
-        double angle = Math.Acos(_vector1.X * _vector2.X + _vector1.Y * _vector2.Y) * (180.0 / Math.PI);
+        DotProductTextBlock.Text = $"{dotProduct:F3}";
+
+        Vector1CoordinatesTextBlock.Text = $"({vector1.X:F3}, {vector1.Y:F3})";
+        Vector2CoordinatesTextBlock.Text = $"({vector2.X:F3}, {vector2.Y:F3})";
+
         AngleTextBlock.Text = $"{angle:F2}°";
     }
 
     private bool IsPointOnVector(Point point, Point vector)
     {
-        double x = _centerX + vector.X * 100;
-        double y = _centerY - vector.Y * 100;
+        double x = _center.X + vector.X * Radius;
+        double y = _center.Y - vector.Y * Radius;
         return Math.Abs(point.X - x) < 10 && Math.Abs(point.Y - y) < 10;
     }
 
-    private Point GetSnappedVector(Point point)
+    private Vector GetSnappedVector(Point point)
     {
-        double dx = point.X - _centerX;
-        double dy = _centerY - point.Y;
-        double length = Math.Sqrt(dx * dx + dy * dy);
+        Vector vector = new(point.X - _center.X, _center.Y - point.Y);
+        vector.Normalize();
 
-        double unitX = dx / length;
-        double unitY = dy / length;
+        double angle = Math.Atan2(vector.Y, vector.X) * (180.0 / Math.PI);
+        double snappedAngle = Math.Round(angle / _step) * _step * (Math.PI / 180.0);
 
-        double snappedX = Math.Round(unitX / _step) * _step;
-        double snappedY = Math.Round(unitY / _step) * _step;
+        double snappedX = Math.Cos(snappedAngle);
+        double snappedY = Math.Sin(snappedAngle);
 
-        double snappedLength = Math.Sqrt(snappedX * snappedX + snappedY * snappedY);
-
-        double maxLength = 1.0;
-
-        if (snappedLength > maxLength)
-        {
-            snappedX /= snappedLength;
-            snappedY /= snappedLength;
-        }
-        else if (snappedLength < maxLength)
-        {
-            snappedX *= maxLength / snappedLength;
-            snappedY *= maxLength / snappedLength;
-        }
-
-        return new Point(snappedX, snappedY);
+        return new Vector(snappedX, snappedY);
     }
 }
