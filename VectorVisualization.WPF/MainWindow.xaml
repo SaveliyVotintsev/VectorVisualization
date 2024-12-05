@@ -71,13 +71,28 @@
                            Text="{Binding ElementName=StepSlider, Path=Value, StringFormat=Шаг: {0:F3}}" />
                 <Slider x:Name="StepSlider"
                         Minimum="0.01"
-                        Maximum="15"
+                        Maximum="90"
                         Value="0.5"
                         IsSnapToTickEnabled="True"
-                        TickFrequency="0.01"
+                        TickFrequency="0.1"
                         ValueChanged="OnStepChanged"
                         VerticalAlignment="Top"
                         Margin="10" />
+                <ItemsControl x:Name="StepButtons">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <UniformGrid Rows="2" />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Button Content="{Binding}"
+                                    Margin="1"
+                                    Padding="1"
+                                    Click="OnStepButtonClicked" />
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
             </StackPanel>
         </StackPanel>
         <GridSplitter Grid.Column="0"

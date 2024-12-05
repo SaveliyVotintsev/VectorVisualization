@@ -1,5 +1,6 @@
 ﻿using System.Globalization;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 
@@ -7,9 +8,9 @@ namespace VectorVisualization.WPF;
 
 public partial class MainWindow
 {
-    private double _step = 0.02;
-    private double _vectorLenght = 1;
     private readonly double _diameter = 300;
+    private double _step = 0.1;
+    private double _vectorLenght = 1;
 
     private Vector _vector1 = new(1, 0);
     private Vector _vector2 = new(0, 1);
@@ -18,7 +19,6 @@ public partial class MainWindow
     private bool _draggingVector2;
 
     private Point _center;
-    private double Radius => _diameter / 2;
 
     public MainWindow()
     {
@@ -26,12 +26,22 @@ public partial class MainWindow
 
         _center = new Point(DrawingCanvas.ActualWidth / 2, DrawingCanvas.ActualHeight / 2);
 
-        DrawingCanvas.MinHeight = _diameter + 50;
-        DrawingCanvas.MinWidth = _diameter + 50;
-
+        StepButtons.ItemsSource = new[] { 1, 2, 3, 5, 15, 30, 45, 60, 75, 90 };
         VectorLengthTextBox.Text = _vectorLenght.ToString(CultureInfo.InvariantCulture);
 
         Draw();
+    }
+
+    private double Radius => _diameter / 2;
+
+    private double Step
+    {
+        get => _step;
+        set
+        {
+            _step = value;
+            StepSlider.Value = _step;
+        }
     }
 
     private void OnSetLengthClicked(object sender, RoutedEventArgs e)
@@ -51,7 +61,17 @@ public partial class MainWindow
 
     private void OnStepChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
     {
-        _step = e.NewValue;
+        Step = e.NewValue;
+    }
+
+    private void OnStepButtonClicked(object sender, RoutedEventArgs e)
+    {
+        if (sender is not Button button)
+        {
+            return;
+        }
+
+        Step = (int)button.Content;
     }
 
     private void OnSizeChanged(object sender, SizeChangedEventArgs e)
@@ -98,47 +118,39 @@ public partial class MainWindow
 
     private void Draw()
     {
-        try
-        {
-            double radius = _diameter / 2;
-            Vector drawingVector1 = _vector1 * radius;
-            Vector drawingVector2 = _vector2 * radius;
+        double radius = _diameter / 2;
+        Vector drawingVector1 = _vector1 * radius;
+        Vector drawingVector2 = _vector2 * radius;
 
-            DrawingCanvas.Children.Clear();
+        DrawingCanvas.Children.Clear();
 
-            DrawingCanvas.DrawAxes(_center);
+        DrawingCanvas.DrawAxes(_center);
 
-            string label = _vectorLenght.ToString("F3");
+        string label = _vectorLenght.ToString("F3");
 
-            DrawingCanvas.DrawText(label, _center.X + Radius, _center.Y, 10);
-            DrawingCanvas.DrawText(label, _center.X, _center.Y - Radius - 15, 10);
-            DrawingCanvas.DrawText("-" + label, _center.X - Radius - 32, _center.Y, 10);
-            DrawingCanvas.DrawText("-" + label, _center.X, _center.Y + Radius, 10);
+        DrawingCanvas.DrawText(label, _center.X + Radius, _center.Y, fontSize: 10);
+        DrawingCanvas.DrawText(label, _center.X, _center.Y - Radius - 15, fontSize:10);
+        DrawingCanvas.DrawText("-" + label, _center.X - Radius - 32, _center.Y, fontSize:10);
+        DrawingCanvas.DrawText("-" + label, _center.X, _center.Y + Radius, fontSize:10);
 
-            DrawingCanvas.DrawCircle(_diameter, _center);
+        DrawingCanvas.DrawCircle(_diameter, _center);
 
-            Color vectorColor1 = _draggingVector1 ? Colors.LightPink : Colors.Red;
-            Color vectorColor2 = _draggingVector2 ? Colors.LightBlue : Colors.Blue;
-            DrawingCanvas.DrawVector(drawingVector1, vectorColor1, _center);
-            DrawingCanvas.DrawVector(drawingVector2, vectorColor2, _center);
+        Color vectorColor1 = _draggingVector1 ? Colors.LightPink : Colors.Red;
+        Color vectorColor2 = _draggingVector2 ? Colors.LightBlue : Colors.Blue;
+        DrawingCanvas.DrawVector(drawingVector1, vectorColor1, _center);
+        DrawingCanvas.DrawVector(drawingVector2, vectorColor2, _center);
 
-            DrawingCanvas.DrawCircleCenter(_center);
+        DrawingCanvas.DrawCircleCenter(_center);
 
-            Vector vector1 = _vector1 * _vectorLenght;
-            Vector vector2 = _vector2 * _vectorLenght;
+        DrawingCanvas.DrawAngleArc(_vector1, _vector2, Colors.Green, _center, _diameter);
 
-            DrawingCanvas.DrawProjection(drawingVector1, vectorColor1, _center, vector1);
-            DrawingCanvas.DrawProjection(drawingVector2, vectorColor2, _center, vector2);
+        Vector vector1 = _vector1 * _vectorLenght;
+        Vector vector2 = _vector2 * _vectorLenght;
 
-            DrawingCanvas.DrawAngleArc(_vector1, _vector2, Colors.Green, _center, _diameter);
+        DrawingCanvas.DrawProjection(drawingVector1, vectorColor1, _center, vector1);
+        DrawingCanvas.DrawProjection(drawingVector2, vectorColor2, _center, vector2);
 
-            UpdateInformation(vector1, vector2);
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
-            throw;
-        }
+        UpdateInformation(vector1, vector2);
     }
 
     private void UpdateInformation(Vector vector1, Vector vector2)
@@ -158,7 +170,7 @@ public partial class MainWindow
     {
         double x = _center.X + vector.X * Radius;
         double y = _center.Y - vector.Y * Radius;
-        return Math.Abs(point.X - x) < 10 && Math.Abs(point.Y - y) < 10;
+        return Math.Abs(point.X - x) < 20 && Math.Abs(point.Y - y) < 20;
     }
 
     private Vector GetSnappedVector(Point point)
@@ -167,7 +179,7 @@ public partial class MainWindow
         vector.Normalize();
 
         double angle = Math.Atan2(vector.Y, vector.X) * (180.0 / Math.PI);
-        double snappedAngle = Math.Round(angle / _step) * _step * (Math.PI / 180.0);
+        double snappedAngle = Math.Round(angle / Step) * Step * (Math.PI / 180.0);
 
         double snappedX = Math.Cos(snappedAngle);
         double snappedY = Math.Sin(snappedAngle);

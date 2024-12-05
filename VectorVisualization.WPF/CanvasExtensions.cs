@@ -157,6 +157,7 @@ public static class CanvasExtensions
             Text = text,
             Foreground = Brushes.Black,
             FontSize = fontSize,
+            ToolTip = text,
         };
 
         Canvas.SetLeft(textBlock, left);
