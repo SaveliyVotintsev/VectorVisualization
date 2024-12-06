@@ -12,7 +12,7 @@ public static class CanvasExtensions
         Ellipse circle = new()
         {
             Stroke = Brushes.Black,
-            StrokeThickness = 1,
+            StrokeThickness = 3,
             Width = diameter,
             Height = diameter,
         };
@@ -44,7 +44,7 @@ public static class CanvasExtensions
         Line line = new()
         {
             Stroke = new SolidColorBrush(color),
-            StrokeThickness = 2,
+            StrokeThickness = 4,
             X1 = start.X,
             Y1 = start.Y,
             X2 = end.X,
@@ -93,8 +93,8 @@ public static class CanvasExtensions
         Path arcPath = new()
         {
             Stroke = new SolidColorBrush(color),
-            StrokeThickness = 1,
-            StrokeDashArray = [6, 6],
+            StrokeThickness = 3,
+            StrokeDashArray = [3, 3],
             Data = pathGeometry,
         };
 
@@ -106,6 +106,7 @@ public static class CanvasExtensions
         TextBlock label = new()
         {
             Text = $"{angle:F2}°",
+            FontSize = 16,
             Foreground = new SolidColorBrush(color),
             Background = Brushes.White,
             ToolTip = $"{angle:F2}°",
@@ -122,7 +123,7 @@ public static class CanvasExtensions
         Line lineX = new()
         {
             Stroke = new SolidColorBrush(Colors.LightGray),
-            StrokeThickness = 1,
+            StrokeThickness = 3,
             X1 = 0,
             Y1 = center.Y,
             X2 = canvas.ActualWidth,
@@ -132,7 +133,7 @@ public static class CanvasExtensions
         Line lineY = new()
         {
             Stroke = new SolidColorBrush(Colors.LightGray),
-            StrokeThickness = 1,
+            StrokeThickness = 3,
             X1 = center.X,
             Y1 = 0,
             X2 = center.X,
@@ -150,7 +151,7 @@ public static class CanvasExtensions
         canvas.DrawText("0", center.X, center.Y);
     }
 
-    public static void DrawText(this Canvas canvas, string text, double left, double top, double fontSize = 14)
+    public static void DrawText(this Canvas canvas, string text, double left, double top, double fontSize = 16)
     {
         TextBlock textBlock = new()
         {
@@ -182,7 +183,7 @@ public static class CanvasExtensions
             Line projectionLine = new()
             {
                 Stroke = new SolidColorBrush(color),
-                StrokeThickness = 1,
+                StrokeThickness = 3,
                 StrokeDashArray = [2, 2],
                 X1 = x1,
                 Y1 = y1,
@@ -198,6 +199,7 @@ public static class CanvasExtensions
             TextBlock label = new()
             {
                 Text = $"{value:F3}",
+                FontSize = 16,
                 Foreground = new SolidColorBrush(color),
                 Background = new SolidColorBrush(Colors.White),
                 ToolTip = $"{value:F3}",
@@ -227,7 +229,7 @@ public static class CanvasExtensions
             Line arrowLine = new()
             {
                 Stroke = new SolidColorBrush(color),
-                StrokeThickness = 2,
+                StrokeThickness = 4,
                 X1 = center.X,
                 Y1 = center.Y,
                 X2 = end.X,

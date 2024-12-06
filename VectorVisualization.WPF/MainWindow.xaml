@@ -4,6 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:wpf="clr-namespace:VectorVisualization.WPF"
+        xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
         mc:Ignorable="d"
         Title="Vector Visualization"
         Height="600"
@@ -13,6 +14,20 @@
         MouseMove="OnMouseMoved"
         MouseUp="OnMouseUp"
         d:DataContext="{d:DesignInstance wpf:MainWindow}">
+    <Window.Resources>
+        <Style TargetType="Button">
+            <Setter Property="Margin"
+                    Value="0 1" />
+            <Setter Property="Padding"
+                    Value="2" />
+        </Style>
+        <Style TargetType="ToggleButton">
+            <Setter Property="Margin"
+                    Value="0 1" />
+            <Setter Property="Padding"
+                    Value="2" />
+        </Style>
+    </Window.Resources>
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="Auto" />
@@ -30,6 +45,16 @@
                          FontSize="14"
                          Text="10"
                          IsReadOnly="True" />
+
+                <UniformGrid Rows="1">
+                    <Button Click="ButtonBase_OnClick">
+                        Показать
+                    </Button>
+                    <ToggleButton Click="ButtonBase1_OnClick">
+                        Отображать
+                    </ToggleButton>
+                </UniformGrid>
+
             </StackPanel>
             <StackPanel Orientation="Vertical">
                 <TextBlock VerticalAlignment="Center">Координаты вектора 1: </TextBlock>
@@ -68,16 +93,15 @@
             </StackPanel>
             <StackPanel Orientation="Vertical">
                 <TextBlock VerticalAlignment="Center"
-                           Text="{Binding ElementName=StepSlider, Path=Value, StringFormat=Шаг: {0:F3}}" />
-                <Slider x:Name="StepSlider"
-                        Minimum="0.01"
-                        Maximum="90"
-                        Value="0.5"
-                        IsSnapToTickEnabled="True"
-                        TickFrequency="0.1"
-                        ValueChanged="OnStepChanged"
-                        VerticalAlignment="Top"
-                        Margin="10" />
+                           Text="{Binding ElementName=StepUoDown, Path=Value, StringFormat=Шаг: {0:F3}}" />
+
+                <xctk:DoubleUpDown x:Name="StepUoDown"
+                                   Increment="1"
+                                   Minimum="0.01"
+                                   Maximum="90"
+                                   Value="0.01"
+                                   ValueChanged="OnStepValueChanged" />
+
                 <ItemsControl x:Name="StepButtons">
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
@@ -87,8 +111,6 @@
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
                             <Button Content="{Binding}"
-                                    Margin="1"
-                                    Padding="1"
                                     Click="OnStepButtonClicked" />
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>

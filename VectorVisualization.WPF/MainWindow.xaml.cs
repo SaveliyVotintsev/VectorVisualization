@@ -1,6 +1,7 @@
 ﻿using System.Globalization;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
 
@@ -19,6 +20,10 @@ public partial class MainWindow
     private bool _draggingVector2;
 
     private Point _center;
+
+    private bool _isShowResult;
+
+    private bool _isShowResults;
 
     public MainWindow()
     {
@@ -40,7 +45,7 @@ public partial class MainWindow
         set
         {
             _step = value;
-            StepSlider.Value = _step;
+            StepUoDown.Value = _step;
         }
     }
 
@@ -62,6 +67,11 @@ public partial class MainWindow
     private void OnStepChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
     {
         Step = e.NewValue;
+    }
+
+    private void OnStepValueChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
+    {
+        Step = (double)e.NewValue;
     }
 
     private void OnStepButtonClicked(object sender, RoutedEventArgs e)
@@ -116,6 +126,26 @@ public partial class MainWindow
         Draw();
     }
 
+    private void ButtonBase_OnClick(object sender, RoutedEventArgs e)
+    {
+        _isShowResult = true;
+
+        Vector vector1 = _vector1 * _vectorLenght;
+        Vector vector2 = _vector2 * _vectorLenght;
+        UpdateInformation(vector1, vector2);
+    }
+
+    private void ButtonBase1_OnClick(object sender, RoutedEventArgs e)
+    {
+        ToggleButton button = (ToggleButton)sender;
+        _isShowResults = button.IsChecked ?? false;
+
+        _isShowResult = _isShowResults;
+        Vector vector1 = _vector1 * _vectorLenght;
+        Vector vector2 = _vector2 * _vectorLenght;
+        UpdateInformation(vector1, vector2);
+    }
+
     private void Draw()
     {
         double radius = _diameter / 2;
@@ -128,10 +158,10 @@ public partial class MainWindow
 
         string label = _vectorLenght.ToString("F3");
 
-        DrawingCanvas.DrawText(label, _center.X + Radius, _center.Y, fontSize: 10);
-        DrawingCanvas.DrawText(label, _center.X, _center.Y - Radius - 15, fontSize:10);
-        DrawingCanvas.DrawText("-" + label, _center.X - Radius - 32, _center.Y, fontSize:10);
-        DrawingCanvas.DrawText("-" + label, _center.X, _center.Y + Radius, fontSize:10);
+        DrawingCanvas.DrawText(label, _center.X + Radius, _center.Y, 14);
+        DrawingCanvas.DrawText(label, _center.X, _center.Y - Radius - 15, 14);
+        DrawingCanvas.DrawText("-" + label, _center.X - Radius - 32, _center.Y, 14);
+        DrawingCanvas.DrawText("-" + label, _center.X, _center.Y + Radius, 14);
 
         DrawingCanvas.DrawCircle(_diameter, _center);
 
@@ -158,12 +188,16 @@ public partial class MainWindow
         double angle = Vector.AngleBetween(vector1, vector2);
         double dotProduct = Vector.Multiply(vector1, vector2);
 
-        DotProductTextBlock.Text = $"{dotProduct:F3}";
-
+        DotProductTextBlock.Text = _isShowResult ? $"{dotProduct:F3}" : "???";
         Vector1CoordinatesTextBlock.Text = $"({vector1.X:F3}, {vector1.Y:F3})";
         Vector2CoordinatesTextBlock.Text = $"({vector2.X:F3}, {vector2.Y:F3})";
 
         AngleTextBlock.Text = $"{angle:F2}°";
+
+        if (_isShowResults == false)
+        {
+            _isShowResult = false;
+        }
     }
 
     private bool IsPointOnVector(Point point, Vector vector)
